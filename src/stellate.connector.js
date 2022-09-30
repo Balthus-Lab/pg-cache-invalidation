@@ -1,0 +1,50 @@
+import { noopLog, pipe } from "./utils.js";
+
+export default ({ url, token }) =>
+  pipe(
+    ({ key_fields, table, views }) => ({
+      views,
+      table,
+      values: key_fields
+        ?.map((d) =>
+          Object.entries(d).map(([name, value]) => ({
+            name,
+            value,
+          }))
+        )
+        ?.flat()
+        ?.filter((v) => v),
+    }),
+    ({ table, values, views }) => [
+      values?.length > 0 && values?.[0]?.name !== "id"
+        ? `_purgeType(type: ${JSON.stringify(
+            table
+          )}, keyFields: ${JSON.stringify(values)
+            .replace(/"name":/g, "name:")
+            .replace(/"value":/g, "value:")})`
+        : values?.length > 0
+        ? `purge${table}(id: ${JSON.stringify(
+            values.map(({ value }) => value)
+          )})`
+        : `purge${table}`,
+      views.map((view_name) => `purge${view_name}`),
+    ],
+    (string) =>
+      fetch(url, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "stellate-token": token,
+        },
+        body: JSON.stringify({
+          query: `
+          mutation {
+            ${string}
+          }
+        `,
+        }),
+      })
+        .then((r) => r.json())
+        .catch(console.error),
+    noopLog
+  );
