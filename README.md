@@ -7,7 +7,9 @@ import "dotenv/config";
 import createTriggers, { onPurgeStellate } from "pg-cache-invalidation";
 import { sql } from "./db.js";
 
-const { default: untruncateJson } = await import("untruncate-json");
+const {
+  default: { default: untruncateJson },
+} = await import("untruncate-json");
 const { notifierKey } = await createTriggers(sql)();
 
 await sql.listen(notifierKey, (str) =>
@@ -16,7 +18,7 @@ await sql.listen(notifierKey, (str) =>
       try {
         return JSON.parse(str);
       } catch {
-        return { ...untruncateJson(str), all: true };
+        return { ...JSON.parse(untruncateJson(str)), all: true };
       }
     })
     .then((v) => (console.log(v), v))
