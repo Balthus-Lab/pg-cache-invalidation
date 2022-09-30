@@ -51,7 +51,7 @@ export default (sql) =>
           BEGIN
             FOR obj IN
             SELECT
-              format('SELECT pg_notify(''cacheinvalid__notify'',  jsonb_pretty(jsonb_build_object(''op'', %L, ''table'', %L, ''views'', %L::jsonb, ''key_fields'', jsonb_agg(jsonb_build_object(%s))))::varchar(7999)) FROM %s', op, o_table_name, array_to_json(ARRAY (
+              format('SELECT pg_notify(''cacheinvalid__notify'', jsonb_build_object(''op'', %L, ''table'', %L, ''views'', %L::jsonb, ''key_fields'', jsonb_agg(jsonb_build_object(%s)))::varchar(7999)) FROM %s HAVING count(sq.*) > 0', op, o_table_name, array_to_json(ARRAY (
                     SELECT
                       u.view_name FROM information_schema.view_table_usage u
                     WHERE
@@ -59,7 +59,7 @@ export default (sql) =>
                     AND u.table_name = o_table_name)), string_agg(format('''%1$s'', %1$s', kcu.column_name), ', '), CASE WHEN need_join THEN
                   '(SELECT * FROM ref_table2 UNION SELECT * FROM ref_table) sq'
                 ELSE
-                  'ref_table'
+                  'ref_table sq'
                 END) AS x
             FROM
               information_schema.key_column_usage kcu
