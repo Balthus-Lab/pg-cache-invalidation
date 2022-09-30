@@ -17,17 +17,17 @@ export default ({ url, token }) =>
     }),
     ({ table, values, views }) => [
       values?.length > 0 && values?.[0]?.name !== "id"
-        ? `_purgeType(type: ${JSON.stringify(
+        ? `_purgeType(soft: true, type: ${JSON.stringify(
             table
           )}, keyFields: ${JSON.stringify(values)
             .replace(/"name":/g, "name:")
             .replace(/"value":/g, "value:")})`
         : values?.length > 0
-        ? `purge${table}(id: ${JSON.stringify(
+        ? `purge${table}(soft: true, id: ${JSON.stringify(
             values.map(({ value }) => value)
           )})`
-        : `purge${table}`,
-      views.map((view_name) => `purge${view_name}`),
+        : `purge${table}(soft: true)`,
+      views.map((view_name) => `purge${view_name}(soft: true)`),
     ],
     (string) =>
       fetch(url, {
