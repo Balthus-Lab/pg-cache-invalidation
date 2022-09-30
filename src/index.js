@@ -51,7 +51,7 @@ export default (sql) =>
           BEGIN
             FOR obj IN
             SELECT
-              format('SELECT pg_notify(''cacheinvalid__notify'', jsonb_pretty(jsonb_build_object(''op'', %L, ''table'', %L, ''key_fields'', json_agg(json_build_object(%s)), ''views'', %L::jsonb))) FROM %s', op, o_table_name, string_agg(format('''%1$s'', %1$s', kcu.column_name), ', '), array_to_json(ARRAY (
+              format('SELECT pg_notify(''cacheinvalid__notify'',  jsonb_pretty(jsonb_build_object(''op'', %L, ''table'', %L, ''key_fields'', jsonb_agg(jsonb_build_object(%s)), ''views'', %L::jsonb))::varchar(7999)) FROM %s', op, o_table_name, string_agg(format('''%1$s'', %1$s', kcu.column_name), ', '), array_to_json(ARRAY (
                     SELECT
                       u.view_name FROM information_schema.view_table_usage u
                     WHERE
@@ -70,12 +70,6 @@ export default (sql) =>
               kcu.table_schema = 'public'
               AND kcu.table_name = o_table_name
               AND tc.constraint_type = 'PRIMARY KEY'
-              AND (
-                SELECT
-                  count(*) < 5000
-                FROM
-                  ref_table
-                LIMIT 1)
               LOOP
                 EXECUTE obj.x;
               END LOOP;

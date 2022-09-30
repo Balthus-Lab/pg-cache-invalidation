@@ -2,9 +2,10 @@ import { noopLog, pipe } from "./utils.js";
 
 export default ({ url, token }) =>
   pipe(
-    ({ key_fields, table, views }) => ({
+    ({ key_fields, table, views, all }) => ({
       views,
       table,
+      all,
       values: key_fields
         ?.map((d) =>
           Object.entries(d).map(([name, value]) => ({
@@ -15,14 +16,14 @@ export default ({ url, token }) =>
         ?.flat()
         ?.filter((v) => v),
     }),
-    ({ table, values, views }) => [
-      values?.length > 0 && values?.[0]?.name !== "id"
+    ({ table, values, views, all }) => [
+      !all && values?.length > 0 && values?.[0]?.name !== "id"
         ? `_purgeType(soft: true, type: ${JSON.stringify(
             table
           )}, keyFields: ${JSON.stringify(values)
             .replace(/"name":/g, "name:")
             .replace(/"value":/g, "value:")})`
-        : values?.length > 0
+        : !all && values?.length > 0
         ? `purge${table}(soft: true, id: ${JSON.stringify(
             values.map(({ value }) => value)
           )})`

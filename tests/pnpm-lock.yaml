@@ -2,12 +2,18 @@ lockfileVersion: 5.4
 
 specifiers:
   postgres: ^3.2.4
+  untruncate-json: ^0.0.1
 
 dependencies:
   postgres: 3.2.4
+  untruncate-json: 0.0.1
 
 packages:
 
   /postgres/3.2.4:
     resolution: {integrity: sha512-iscysD+ZlM4A9zj0RS2zo3f4Us4yuov94Yx+p3dE1rEARaBHC8R3/gRq40KEnWp1lxjuFq9EjuAenIUsPaTaDA==}
+    dev: false
+
+  /untruncate-json/0.0.1:
+    resolution: {integrity: sha512-4W9enDK4X1y1s2S/Rz7ysw6kDuMS3VmRjMFg7GZrNO+98OSe+x5Lh7PKYoVjy3lW/1wmhs6HW0lusnQRHgMarA==}
     dev: false
