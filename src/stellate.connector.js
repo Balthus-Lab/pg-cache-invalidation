@@ -1,4 +1,5 @@
 import { noopLog, pipe } from "./utils.js";
+import { fetch } from "undici";
 
 export default ({ url, token }) =>
   pipe(
