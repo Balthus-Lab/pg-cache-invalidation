@@ -1,4 +1,4 @@
-import { noopLog, pipe } from "./utils.js";
+import { handleDebug, pipe } from "./utils.js";
 import { fetch } from "undici";
 
 export default ({ url, token }) =>
@@ -48,5 +48,5 @@ export default ({ url, token }) =>
       })
         .then((r) => r.json())
         .catch(console.error),
-    noopLog
+    handleDebug.noopLog
   );
