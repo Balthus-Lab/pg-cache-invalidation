@@ -144,7 +144,7 @@ export default (sql) =>
                 PERFORM
                   pg_notify('cacheinvalid__notify', jsonb_pretty(jsonb_build_object('table', table_name)));
                 IF obj.command_tag IN ('CREATE TABLE', 'CREATE TABLE AS') THEN
-                  PERFORM
+                  CALL
                     cacheinvalid__create_notify (table_name);
                 END IF;
               END LOOP;
