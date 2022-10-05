@@ -4,7 +4,6 @@ import {
   throwErr,
   debounce,
   groupByArray,
-  noopLog,
 } from "./utils.js";
 import { fetch } from "undici";
 import editStellateConfig from "./editStellateConfig.js";
@@ -64,7 +63,7 @@ export default ({ url, purge_token, user_token, service, org }) => ({
             "stellate-token": purge_token,
           },
           body: JSON.stringify(
-            noopLog({
+            handleDebug.noopLog({
               query: `
           mutation {
             ${string}
