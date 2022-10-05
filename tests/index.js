@@ -17,5 +17,12 @@ await sql.listen(notifierKey, (str) =>
       }
     })
     .then((v) => (console.log(v), v))
+    .then(
+      onPurgeStellate({
+        token: process.env.STELLATE_TOKEN,
+        url: process.env.STELLATE_URL,
+        soft: false,
+      })
+    )
     .catch(console.error)
 );
