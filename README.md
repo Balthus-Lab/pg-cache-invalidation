@@ -4,30 +4,41 @@
 
 ```js
 import "dotenv/config";
-import createTriggers, { onPurgeStellate } from "pg-cache-invalidation";
+import pgInvalidation, { stellateConnector } from "pg-cache-invalidation";
 import { sql } from "./db.js";
 
-const {
-  default: { default: untruncateJson },
-} = await import("untruncate-json");
-const { notifierKey } = await createTriggers(sql)();
+const { notifierKey, pkNotifierKey, start } = await pgInvalidation(sql);
+const { onPurgeStellate, onAlterPkStellate } = await stellateConnector({
+  purge_token: process.env.STELLATE_PURGE_TOKEN,
+  user_token: process.env.STELLATE_USER_TOKEN,
+  org: process.env.STELLATE_ORG,
+  url: process.env.STELLATE_URL,
+  service: "ariane",
+});
+
+const parseJson = async (str) => {
+  try {
+    return JSON.parse(str);
+  } catch {
+    const { default: { default: untruncateJson } = {} } = await import(
+      "untruncate-json"
+    );
+    return { ...JSON.parse(untruncateJson(str)), all: true };
+  }
+};
+
+const onPk = onAlterPkStellate();
+await sql.listen(
+  pkNotifierKey,
+  (str) => Promise.resolve(str).then(parseJson).then(onPk).catch(console.error),
+  start
+);
 
 await sql.listen(notifierKey, (str) =>
   Promise.resolve(str)
-    .then(() => {
-      try {
-        return JSON.parse(str);
-      } catch {
-        return { ...JSON.parse(untruncateJson(str)), all: true };
-      }
-    })
+    .then(parseJson)
     .then((v) => (console.log(v), v))
-    .then(
-      onPurgeStellate({
-        token: process.env.STELLATE_TOKEN,
-        url: process.env.STELLATE_URL,
-      })
-    )
+    .then(onPurgeStellate({ soft: true }))
     .catch(console.error)
 );
 ```
