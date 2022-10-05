@@ -20,7 +20,7 @@ export default ({ url, token, soft }) =>
     }),
     ({ table, values, purge, all, soft }) =>
       [
-        purge.includes(table) &&
+        purge?.includes(table) &&
           (!all && values?.length > 0 && values?.[0]?.name !== "id"
             ? `_purgeType(soft: ${soft}, type: ${JSON.stringify(
                 table
