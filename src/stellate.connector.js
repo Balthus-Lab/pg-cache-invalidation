@@ -29,7 +29,7 @@ export default ({ url, token }) =>
             values.map(({ value }) => value)
           )})`
         : `purge${table}(soft: true)`,
-      views.map((view_name) => `purge${view_name}(soft: true)`),
+      views?.map((view_name) => `purge${view_name}(soft: true)`),
     ],
     (string) =>
       fetch(url, {
