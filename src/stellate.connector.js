@@ -1,12 +1,13 @@
 import { handleDebug, pipe } from "./utils.js";
 import { fetch } from "undici";
 
-export default ({ url, token }) =>
+export default ({ url, token, soft }) =>
   pipe(
     ({ key_fields, table, views, all }) => ({
       views,
       table,
       all,
+      soft: Boolean(soft),
       values: key_fields
         ?.map((d) =>
           Object.entries(d).map(([name, value]) => ({
@@ -17,19 +18,19 @@ export default ({ url, token }) =>
         ?.flat()
         ?.filter((v) => v),
     }),
-    ({ table, values, views, all }) => [
+    ({ table, values, views, all, soft }) => [
       !all && values?.length > 0 && values?.[0]?.name !== "id"
-        ? `_purgeType(soft: true, type: ${JSON.stringify(
+        ? `_purgeType(soft: ${soft}, type: ${JSON.stringify(
             table
           )}, keyFields: ${JSON.stringify(values)
             .replace(/"name":/g, "name:")
             .replace(/"value":/g, "value:")})`
         : !all && values?.length > 0
-        ? `purge${table}(soft: true, id: ${JSON.stringify(
+        ? `purge${table}(soft: ${soft}, id: ${JSON.stringify(
             values.map(({ value }) => value)
           )})`
-        : `purge${table}(soft: true)`,
-      views?.map((view_name) => `purge${view_name}(soft: true)`),
+        : `purge${table}(soft: ${soft})`,
+      views?.map((view_name) => `purge${view_name}(soft: ${soft})`),
     ],
     (string) =>
       fetch(url, {
