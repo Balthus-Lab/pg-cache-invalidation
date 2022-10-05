@@ -56,7 +56,8 @@ export default (sql) =>
                       u.view_name FROM information_schema.view_table_usage u
                     WHERE
                       u.table_schema NOT IN ('information_schema', 'pg_catalog')
-                    AND u.table_name = o_table_name)), string_agg(format('''%1$s'', %1$s', kcu.column_name), ', '), CASE WHEN need_join THEN
+                    AND u.table_name = o_table_name
+                    AND (SELECT jsonb_path_query_array(metadata::jsonb, '$.sources[*].tables[*].table.name') FROM "hdb_catalog".hdb_metadata) ? u.view_name)), string_agg(format('''%1$s'', %1$s', kcu.column_name), ', '), CASE WHEN need_join THEN
                   '(SELECT * FROM ref_table2 UNION SELECT * FROM ref_table) sq'
                 ELSE
                   'ref_table sq'

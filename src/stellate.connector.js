@@ -1,4 +1,4 @@
-import { handleDebug, pipe } from "./utils.js";
+import { handleDebug, pipe, throwErr } from "./utils.js";
 import { fetch } from "undici";
 
 export default ({ url, token, soft }) =>
@@ -48,6 +48,7 @@ export default ({ url, token, soft }) =>
         }),
       })
         .then((r) => r.json())
+        .then((r) => (r.errors ? throwErr(r) : r))
         .catch(console.error),
     handleDebug.noopLog
   );
