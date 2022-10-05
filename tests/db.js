@@ -9,4 +9,4 @@ export const dbConfig = {
   database: process.env.PSQL_DATABASE,
 };
 
-export const sql = postgres(dbConfig, { debug: true });
+export const sql = postgres({ ...dbConfig, onnotice: () => null });

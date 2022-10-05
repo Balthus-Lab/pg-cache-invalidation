@@ -1,6 +1,6 @@
 import { pipe, handleDebug } from "./utils.js";
 
-export { default as stellateConnector } from "./stellate.connector.js";
+export { default as stellateConnector } from "./connectors/stellate/index.js";
 
 export const clean = (sql) => async () =>
   sql

@@ -4,7 +4,8 @@ import {
   throwErr,
   debounce,
   groupByArray,
-} from "./utils.js";
+  noopLog,
+} from "../../utils.js";
 import { fetch } from "undici";
 import editStellateConfig from "./editStellateConfig.js";
 
@@ -56,26 +57,26 @@ export default ({ url, purge_token, user_token, service, org }) => ({
       (arr) => arr.join("\n"),
       handleDebug.noopLog,
       (string) =>
-        fetch(url, {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            "stellate-token": purge_token,
-          },
-          body: JSON.stringify(
-            handleDebug.noopLog({
-              query: `
+        !(string?.trim()?.length > 0)
+          ? null
+          : fetch(url, {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+                "stellate-token": purge_token,
+              },
+              body: JSON.stringify({
+                query: `
           mutation {
             ${string}
           }
         `,
+              }),
             })
-          ),
-        })
-          .then((r) => r.json())
-          .then((v) => (console.log(v), v))
-          .then((r) => (r.errors ? throwErr(r) : r))
-          .catch(console.error),
+              .then((r) => r.json())
+              .then((v) => (console.log(v), v))
+              .then((r) => (r.errors ? throwErr(r) : r))
+              .catch(console.error),
       handleDebug.noopLog
     ),
 });
