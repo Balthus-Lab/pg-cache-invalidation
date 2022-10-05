@@ -1,3 +1,5 @@
 .env*
 !.env.default
 node_modules
+.stellate
+stellate.yml

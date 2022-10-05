@@ -12,6 +12,8 @@
   "license": "ISC",
   "dependencies": {
     "postgres": "^3.2.4",
-    "untruncate-json": "^0.0.1"
+    "stellate": "^1.17.1",
+    "untruncate-json": "^0.0.1",
+    "yaml": "^2.1.3"
   }
 }

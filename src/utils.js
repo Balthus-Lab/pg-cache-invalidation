@@ -9,3 +9,28 @@ export const handleDebug = ((debug) => ({
 export const throwErr = (e) => {
   throw Error(JSON.stringify(e));
 };
+export const debounce = (fn, delay = 1000) => {
+  let arr = [];
+  let id;
+  return (obj) => {
+    arr.push(obj);
+    clearTimeout(id);
+    id = setTimeout(() => {
+      fn([...arr]);
+      arr = [];
+    }, delay);
+  };
+};
+export const groupByReduce = (field) => (accumulator, row) => {
+  const groupby = typeof field === "function" ? field(row) : field;
+  const obj = Object.fromEntries(accumulator);
+  obj[groupby] = obj[groupby] || [];
+  obj[groupby].push(row);
+  return Object.entries(obj);
+};
+export const groupBy = (data, field, { asList = false } = {}) => {
+  const result = (data ?? []).reduce(groupByReduce(field), []);
+  return !asList ? Object.fromEntries(result) : result;
+};
+export const groupByArray = (data, field) =>
+  groupBy(data, field, { asList: true });

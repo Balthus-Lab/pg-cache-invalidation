@@ -1,6 +1,6 @@
 import { pipe, handleDebug } from "./utils.js";
 
-export { default as onPurgeStellate } from "./stellate.connector.js";
+export { default as stellateConnector } from "./stellate.connector.js";
 
 export const clean = (sql) => async () =>
   sql
@@ -37,12 +37,13 @@ export const clean = (sql) => async () =>
     )
     .then(handleDebug.begin);
 
-export default (sql) =>
-  pipe(clean(sql), () =>
-    sql
-      .begin((sql) =>
-        [
-          sql`
+export default pipe(
+  (sql) =>
+    pipe(clean(sql), () =>
+      sql
+        .begin((sql) =>
+          [
+            sql`
             CREATE OR REPLACE FUNCTION "public"."cacheinvalid__notify" ()
               RETURNS TRIGGER
               AS $$
@@ -90,7 +91,7 @@ export default (sql) =>
             LANGUAGE plpgsql;
             
           `,
-          sql`    
+            sql`    
           CREATE OR REPLACE PROCEDURE "public"."cacheinvalid__create_notify" (table_name text)
           AS $$
           DECLARE
@@ -98,6 +99,21 @@ export default (sql) =>
             trigger_name text;
             refs text;
           BEGIN
+          PERFORM
+            pg_notify('cacheinvalid__update_table', jsonb_build_object ('table', table_name, 'pk', jsonb_agg(sq.pk))::varchar(7999))
+          FROM (
+            SELECT
+              a.attname as pk
+            FROM
+              pg_index i
+              JOIN pg_attribute a ON a.attrelid = i.indrelid
+                AND a.attnum = ANY (i.indkey)
+            WHERE
+              i.indrelid = table_name::regclass
+              AND i.indisprimary
+              AND (SELECT
+                    jsonb_path_query_array(metadata::jsonb, '$.sources[*].tables[*].table.name')
+                  FROM "hdb_catalog".hdb_metadata) ? table_name) sq;
           FOR obj IN VALUES ('INSERT'), ('UPDATE'), ('DELETE')
           LOOP
             trigger_name := format('cacheinvalid__notify_on_%s', lower(obj.column1));
@@ -118,7 +134,7 @@ export default (sql) =>
           END;
           $$
           LANGUAGE plpgsql;`,
-          sql`
+            sql`
             DO $$
             DECLARE
               obj record;
@@ -137,7 +153,7 @@ export default (sql) =>
             $$;
             
           `,
-          sql`
+            sql`
             CREATE OR REPLACE FUNCTION "public"."cacheinvalid__create_notify_table" ()
               RETURNS event_trigger
               AS $$
@@ -154,7 +170,7 @@ export default (sql) =>
                   table_name := split_part(obj.object_identity, '.', 2);
                   PERFORM
                     pg_notify('cacheinvalid__notify', jsonb_pretty(jsonb_build_object('table', table_name)));
-                  IF obj.command_tag IN ('CREATE TABLE', 'CREATE TABLE AS') THEN
+                  IF obj.command_tag IN ('CREATE TABLE', 'CREATE TABLE AS', 'ALTER TABLE') THEN
                     CALL cacheinvalid__create_notify (table_name);
                   END IF;
                 END LOOP;
@@ -163,15 +179,22 @@ export default (sql) =>
             LANGUAGE plpgsql;
             
           `,
-          sql`
+            sql`
         CREATE EVENT TRIGGER "cacheinvalid__create_notify_table" ON ddl_command_end
             WHEN TAG IN (
               'CREATE TABLE','CREATE TABLE AS', 
-              'REFRESH MATERIALIZED VIEW'
+              'REFRESH MATERIALIZED VIEW',
+              'ALTER TABLE'
             )
             EXECUTE FUNCTION "public"."cacheinvalid__create_notify_table" ();`,
-        ].map(handleDebug.map)
-      )
-      .then(handleDebug.begin)
-      .then(() => ({ notifierKey: "cacheinvalid__notify" }))
-  );
+          ].map(handleDebug.map)
+        )
+        .then(handleDebug.begin)
+    ),
+  (start) => ({
+    notifierKey: "cacheinvalid__notify",
+    pkNotifierKey: "cacheinvalid__update_table",
+    start,
+    clean,
+  })
+);
