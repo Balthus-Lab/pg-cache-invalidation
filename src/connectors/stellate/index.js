@@ -50,17 +50,12 @@ export default ({ url, purge_token, user_token, service, org }) => ({
                     )}`
                 )})`
               : `purge${table}(soft: ${soft})`),
-          purge?.includes(table) &&
-            !all &&
-            values?.length > 0 &&
-            `_purgeType(soft: ${soft}, type: ${JSON.stringify(
-              table
-            )}, keyFields: ${JSON.stringify(values)
-              .replace(/"name":/g, "name:")
-              .replace(/"value":/g, "value:")})`,
           ...purge
-           // ?.filter((name) => name !== table)
-            ?.map((view_name) => `alias_purge${view_name}: purge${view_name}(soft: ${soft})`),
+            ?.filter((name) => name !== table)
+            ?.map(
+              (view_name) =>
+                `alias_purge${view_name}: purge${view_name}(soft: ${soft})`
+            ),
         ].filter((v) => v),
       (arr) => arr.join("\n"),
       handleDebug.noopLog,
