@@ -38,6 +38,7 @@ export default ({ user_token, org, service }) =>
     const config = await pullConfig(run)({ service });
     await pushConfig(run)({
       ...config,
+      mutationPolicy: "Type",
       keyFields: {
         types: {
           ...(config?.keyFields?.types ?? {}),
